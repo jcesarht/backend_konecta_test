@@ -13,10 +13,13 @@ const initialize = ()=>{
 const getConexion = () =>{
     return conn;
 }
-const getAllEmployees = async ()=>{
+const getAllRequests = async (employeeId)=>{
     let response = new Promise((resolve,reject)=>{
         const conexion = getConexion();
-        const sql = "SELECT * FROM empleados";
+        const sql = `
+        SELECT * 
+        FROM solicitudes
+        WHERE id_empleado = '${employeeId}'`;
         conexion.query(sql, function (err, result, fields) {
             if (err) reject(err);
             else
@@ -27,21 +30,21 @@ const getAllEmployees = async ()=>{
     return response;
 }
 
-const getEmployee = async (employeeId = 0) => {
+const getRequest = async (requestId = 0) => {
     let response ={
         error:true,
         message:''
     }
     try{
-        if(employeeId==0){
+        if(requestId==0){
             throw Error("Id can not by empty");
         }
         let res = await new Promise((resolve,reject)=>{
             const conexion = getConexion();
             const sql = 
             `SELECT * 
-            FROM empleados 
-            WHERE  id = '${employeeId}'`;
+            FROM solicitudes 
+            WHERE  id = '${requestId}'`;
             conexion.query(sql, function (err, result, fields) {
                 if (err) reject({
                     error:true,
@@ -60,18 +63,22 @@ const getEmployee = async (employeeId = 0) => {
     return response;
 };
 
-const createEmployee = async (newEmployeeData) => {
-    const newEmployee = {...newEmployeeData};
+const createRequest = async (newRequestData) => {
+    const newRequest = {...newRequestData};
     let response = new Promise((resolve, reject) => {
             const conexion = getConexion();
             const sql = 
-            `INSERT INTO empleados (
-                nombre,
-                salario
+            `INSERT INTO solicitudes (
+                codigo,
+                descripcion,
+                resumen,
+                id_empleado
                 )
             VALUES (
-                '${newEmployee.name}',
-                '${newEmployee.salary}'
+                '${newRequest.code}',
+                '${newRequest.description}',
+                '${newRequest.resume}',
+                '${newRequest.employee_id}'
             )`;
             conexion.query(sql,async function (err, result) {
             if (err) reject({
@@ -79,10 +86,10 @@ const createEmployee = async (newEmployeeData) => {
                 message: err
             });
             else {
-                let dataEmployee = {id: result.insertId,...newEmployee};
+                let dataRequest = {id: result.insertId,...newRequest};
                 resolve({
                     error: false,
-                    data: dataEmployee
+                    data: dataRequest
                 })
             }
         });
@@ -91,24 +98,30 @@ const createEmployee = async (newEmployeeData) => {
     return response;
 };
 
-const updateEmployee = async (employee)=>{
+const updateRequest = async (request)=>{
     let response = {
         error : true,
         message : ''
     };
     try{
          
-        if (Object.entries(employee).length === 0 )
-            throw new Error('Data employee is empty');
+        if (Object.entries(request).length === 0 )
+            throw new Error('Data request is empty');
         let res = await new Promise((resolve,reject)=>{
             const conexion = getConexion();
+            let add_field = '';
+            if(request.employee_id){
+                add_field = `, id_empleado = '${request.employee_id}'`;
+            }
             const sql = 
             `UPDATE
-                empleados
+                solicitudes
             SET
-                nombre = '${employee.name}',
-                salario = '${employee.salary}'
-            WHERE id = '${employee.id}' `;
+                codigo = '${request.code}',
+                descripcion = '${request.description}',
+                resumen = '${request.resume}'
+                ${add_field}
+            WHERE id = '${request.id}' `;
             conexion.query(sql,async function (err, result) {
                 if (err) reject({
                     error: true,
@@ -127,7 +140,7 @@ const updateEmployee = async (employee)=>{
         if(res.error)
             throw new Error(res.message);
         if(res.affectedRows == 0){
-            response.message = 'Any record was updated to employee ' + employee.id;
+            response.message = 'Any record was updated to request ' + request.id;
         }
         response.error = false;
         response = {...response,affectedRows: res.affectedRows};
@@ -138,7 +151,7 @@ const updateEmployee = async (employee)=>{
     return response;
 };
 
-const deleteEmployee = async (employeeId = 0)=>{
+const deleteRequest = async (requestId = 0)=>{
     let response = {
         error : true,
         message : ''
@@ -147,7 +160,7 @@ const deleteEmployee = async (employeeId = 0)=>{
         let res = await new Promise((resolve,reject)=>{
             const conexion = getConexion();
             const sql = 
-            `DELETE FROM empleados WHERE  id = '${employeeId}'`;
+            `DELETE FROM solicitudes WHERE id = '${requestId}'`;
             conexion.query(sql,async function (err, result) {
                 if (err) reject({
                     error: true,
@@ -163,9 +176,9 @@ const deleteEmployee = async (employeeId = 0)=>{
             conexion.end();
         });
         if (!res.error && res.affectedRows == 0){
-            response.message = `Any employee was affected`;
+            response.message = `Any request was affected`;
         }else{
-            response.message = `Employee ${employeeId} was deleted successfully`;
+            response.message = `Request ${requestId} was deleted successfully`;
         }
         response.error= false;
         response = {...response,affectedRows: res.affectedRows};
@@ -178,9 +191,9 @@ const deleteEmployee = async (employeeId = 0)=>{
 
 module.exports={
     initialize,
-    getAllEmployees,
-    getEmployee,
-    createEmployee,
-    updateEmployee,
-    deleteEmployee
+    getAllRequests,
+    getRequest,
+    createRequest,
+    updateRequest,
+    deleteRequest
 };
