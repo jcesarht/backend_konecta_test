@@ -11,16 +11,7 @@ app.use(cors({
   origin: 'http://localhost:3000' // Replace with your React app's origin
 }));
 
-app.use(bodyParser.json({ limit: '10mb', // Optional: Set a limit for JSON size
-  verify: (req, res, buf, encoding) => {
-    try {
-      JSON.parse(buf.toString(encoding));
-    } catch (err) {
-      let response  = 
-      res.status(400).send({error: true,message: 'Invalid JSON format in request body'});
-    }
-  }
-}));
+
 app.use(express.json());
 app.use('/api/v1/employee',v1Employees);
 app.use('/api/v1/request',v1Request);
